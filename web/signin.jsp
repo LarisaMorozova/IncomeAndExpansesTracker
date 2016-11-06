@@ -12,13 +12,14 @@
     String userid = request.getParameter("uname");
     String pwd = request.getParameter("pass");
     String hashPass= PasswordHash.getEncryptedPassword(pwd);
-    Class.forName("com.mysql.jdbc.Driver");
-    InputStream stream = application.getResourceAsStream("/dbcon.properties");
+    InputStream privatestream = application.getResourceAsStream("/dbcon.properties");
+    InputStream publicstream = application.getResourceAsStream("/dbconpublic.properties");
     Properties props = new Properties();
-    props.load(stream);
+    props.load(privatestream);
+    props.load(publicstream);
     Class.forName("com.mysql.jdbc.Driver");
 
-    String databaseName = "finances";
+    String databaseName = props.getProperty("dbname");
     String dbconnection = props.getProperty("dbconnection");
     String dbuser = props.getProperty("dbuser");
     String dbpass = props.getProperty("dbpass");
@@ -31,11 +32,12 @@
     rs = st.executeQuery("select * from users where uname='" + userid + "' and pass='" + hashPass + "'");
     if (rs.next()) {
         session.setAttribute("userid", userid);
-        //out.println("welcome " + userid);
+        //out.println("welcome " + userid)
         //out.println("<a href='logout.jsp'>Log out</a>");
+        String username = (String) session.getAttribute("userid");
         String pagename = (String) session.getAttribute("currentpage");
         if (pagename == null) {
-            pagename = "success.jsp";
+            pagename = "index.jsp?login_"+ username;
         }
         response.sendRedirect(pagename);
     } else {

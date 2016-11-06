@@ -4,6 +4,7 @@
     Author     : larisamorozova
 --%>
 
+<%@page import="java.util.logging.Logger"%>
 <%@page import="java.util.Properties"%>
 <%@page import="java.io.InputStream"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -12,29 +13,84 @@
 <%@ page import ="java.sql.*" %>
 <%@ page import ="java.lang.*" %>
 <%
+    Logger logger = Logger.getLogger( "source.jsp" );
     DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
     java.util.Date fromIncomesDate = formatter.parse(request.getParameter("from_date"));
     java.sql.Date fromIncomeDate = new java.sql.Date(fromIncomesDate.getTime());
     java.util.Date toIncomesDate = formatter.parse(request.getParameter("to_date"));
     java.sql.Date toIncomeDate = new java.sql.Date(toIncomesDate.getTime());
     String category = request.getParameter("category");
-    Class.forName("com.mysql.jdbc.Driver");
-    InputStream stream = application.getResourceAsStream("/dbcon.properties");
+    InputStream privatestream = application.getResourceAsStream("/dbcon.properties");
+    InputStream publicstream = application.getResourceAsStream("/dbconpublic.properties");
     Properties props = new Properties();
-    props.load(stream);
+    props.load(privatestream);
+    props.load(publicstream);
     Class.forName("com.mysql.jdbc.Driver");
 
-    String databaseName = "finances";
+    String databaseName = props.getProperty("dbname");
     String dbconnection = props.getProperty("dbconnection");
     String dbuser = props.getProperty("dbuser");
     String dbpass = props.getProperty("dbpass");
 
-    Connection con = DriverManager.getConnection(dbconnection+databaseName,
+    Connection con = DriverManager.getConnection(dbconnection + databaseName,
             dbuser, dbpass);
     Statement st = con.createStatement();
-    ResultSet resultset = st.executeQuery("SELECT income_date, category, description, amount FROM incomes WHERE income_date between '" + fromIncomeDate + "' and '" + toIncomeDate + "' Order by income_date ASC");
     Statement statemant = con.createStatement();
-    ResultSet resultSum = statemant.executeQuery("SELECT SUM(amount) FROM incomes WHERE income_date between '" + fromIncomeDate + "' and '" + toIncomeDate + "'");
+    Statement statinc = con.createStatement();
+    Statement statexp = con.createStatement();
+    ResultSet resultset = null;
+    ResultSet resultSum = null;
+    ResultSet resultincome = null;
+    ResultSet resultexpense = null;
+    String resultin=null;
+    String resultexp = null;
+    double difference = 0.00;
+
+    logger.warning("--> hello.");
+    if (category.contains("income")) {
+        resultset = st.executeQuery(
+                "SELECT income_date, category, description, amount FROM incomes " +
+                "WHERE income_date between '" + fromIncomeDate + "' and '" + toIncomeDate +
+                "' ORDER BY income_date ASC"
+        );
+        resultSum = statemant.executeQuery(
+                "SELECT SUM(amount) FROM incomes " +
+                "WHERE income_date between '" + fromIncomeDate + "' and '" + toIncomeDate + "'"
+        );
+    } else if (category.contains("expense")) {
+        resultset = st.executeQuery(
+                "SELECT expense_date, category, description, amount FROM expenses " +
+                "WHERE expense_date between '" + fromIncomeDate + "' and '" + toIncomeDate +
+                "' Order by expense_date ASC"
+        );
+        resultSum = statemant.executeQuery(
+                "SELECT SUM(amount) FROM expenses " +
+                "WHERE expense_date between '" + fromIncomeDate + "' and '" + toIncomeDate + "'"
+        );
+    } else if(category.contains("allmoney")) {
+        
+        logger.warning("test");
+        resultincome = statinc.executeQuery(
+                "SELECT SUM(amount) as sum FROM incomes " +
+                "WHERE income_date between '" + fromIncomeDate + "' and '" + toIncomeDate + "';"
+        );
+        logger.warning("test1");
+        resultincome.first();
+        logger.warning("-->" + resultincome.getDouble(1));
+        
+        resultexpense = statexp.executeQuery(
+                "SELECT SUM(amount) as sum FROM expenses " +
+                "WHERE expense_date between '" + fromIncomeDate + "' and '" + toIncomeDate + "'"
+        );
+        resultexpense.first();
+        resultincome.first();
+        logger.warning("--->" + resultexpense.getString(1));
+        resultin = resultincome.getString(1);
+        resultexp = resultexpense.getString(1);
+        difference = resultincome.getDouble("sum") - 
+                resultexpense.getDouble("sum");
+        logger.warning("Difference: " + difference);
+    }
 %>
 <!DOCTYPE html>
 <html>
@@ -62,11 +118,25 @@
                     <li><a href="expenses.jsp">Expenses</a></li>
                     <li class="active">Reports</li>
                 </ul>
+                <%
+                    if ((session.getAttribute("userid") == null)
+                            || (session.getAttribute("userid") == "")) {
+                %>  
                 <ul class="pull-right">
                     <li><a href="signup.jsp">Sign Up</a></li>
                     <li><a href="login.jsp">Log In</a></li>
                     <li><a href="contacts.jsp">Contacts</a></li>
-                </ul>	
+                </ul>
+                <%
+                } else {
+                %> 
+                <ul class="pull-right">
+                    <span class="welcome">Welcome, <%=session.getAttribute("userid")%></span>
+                    <a href='logout.jsp'>Log out</a>
+                </ul>
+                <%
+                    }
+                %>
             </div>
         </div>
         <div class="jumbotron">
@@ -89,6 +159,7 @@
 
                     </div>
                     <br/>
+                    <%if(category.contains("income") || category.contains("expense")){%>
                     <table class="table">
                         <thead class="thead-inverse">
                             <tr class="bg-primary">
@@ -98,7 +169,7 @@
                                 <th>Amount</th>
                             </tr>
                         </thead>
-                        <%if(resultset==null&&resultSum==null){%>
+                        <%if (resultset == null && resultSum == null) {%>
                         <p>No data for chosen period. Please, choose different dates.</p>
                         <%}%>
                         <% while (resultset.next()) {%>
@@ -120,7 +191,29 @@
                         </tbody>
                         <% }%>
                     </table>
-                         <h5 style="text-align: right"><a href='reports.jsp'>Go back</a></h5>
+                    <%}
+                        else if(category.contains("allmoney")){%>
+                        <table class="table">
+                        <thead class="thead-inverse">
+                            <tr class="bg-primary">
+                                <th>Period</th>
+                                <th>Income</th>
+                                <th>Expense</th>
+                                <th>Difference</th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody>
+                            <tr>
+                                <td> <%=fromIncomeDate + " - " + toIncomeDate%></td>
+                                <td> <%= resultin %></td>
+                                <td><%= resultexp %></td>
+                                <td> <%= difference%></td>
+                            </tr>
+                        </tbody> 
+                    </table>
+                             <% }%>
+                    <h5 style="text-align: right"><a href='reports.jsp'>Go back</a></h5>
                 </div>
             </div>
         </div>

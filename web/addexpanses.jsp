@@ -16,13 +16,14 @@
     double amount = Double.parseDouble((request.getParameter("amount")));
     String description = request.getParameter("description");
     String category = request.getParameter("category");
-    Class.forName("com.mysql.jdbc.Driver");
-    InputStream stream = application.getResourceAsStream("/dbcon.properties");
+    InputStream privatestream = application.getResourceAsStream("/dbcon.properties");
+    InputStream publicstream = application.getResourceAsStream("/dbconpublic.properties");
     Properties props = new Properties();
-    props.load(stream);
+    props.load(privatestream);
+    props.load(publicstream);
     Class.forName("com.mysql.jdbc.Driver");
 
-    String databaseName = "finances";
+    String databaseName = props.getProperty("dbname");
     String dbconnection = props.getProperty("dbconnection");
     String dbuser = props.getProperty("dbuser");
     String dbpass = props.getProperty("dbpass");

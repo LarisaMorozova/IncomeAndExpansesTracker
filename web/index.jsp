@@ -34,11 +34,23 @@
                     <li><a href="expenses.jsp">Expenses</a></li>
                     <li><a href="reports.jsp">Reports</a></li>
                 </ul>
+                <%
+                    if ((session.getAttribute("userid") == null) || (session.getAttribute("userid") == "")) {
+                %> 
                 <ul class="pull-right">
                     <li><a href="signup.jsp">Sign Up</a></li>
                     <li><a href="login.jsp">Log In</a></li>
                     <li><a href="contacts.jsp">Contacts</a></li>
-                </ul>	
+                </ul>
+                <%} else {
+                %> 
+                <ul class="pull-right">
+                    <span class="welcome">Welcome, <%=session.getAttribute("userid")%></span>
+                    <a href='logout.jsp'>Log out</a>
+                </ul>
+                <%
+                    }
+                %>
             </div>
         </div>
         <div class="jumbotron">
@@ -110,7 +122,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <p style="color:green">MySQL databases deployment went successfully.</p>
-                        <p>Please register your user <a href='signup.jsp'>here</a></p>
+                        <p>Please register <a href='signup.jsp'>here</a></p>
                     </div>
                 </div>
             </div>

@@ -17,12 +17,14 @@
 <%@ page import ="java.sql.*" %>
 <%@ page import ="java.lang.*" %>
 <%
-    InputStream stream = application.getResourceAsStream("/dbcon.properties");
+    InputStream privatestream = application.getResourceAsStream("/dbcon.properties");
+    InputStream publicstream = application.getResourceAsStream("/dbconpublic.properties");
     Properties props = new Properties();
-    props.load(stream);
+    props.load(privatestream);
+    props.load(publicstream);
     Class.forName("com.mysql.jdbc.Driver");
 
-    String databaseName = "finances";
+    String databaseName = props.getProperty("dbname");
     String dbconnection = props.getProperty("dbconnection");
     String dbuser = props.getProperty("dbuser");
     String dbpass = props.getProperty("dbpass");

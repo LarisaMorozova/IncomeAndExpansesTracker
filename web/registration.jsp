@@ -20,14 +20,14 @@
     if (user != null && !user.isEmpty() && pwd != null && !pwd.isEmpty() && 
         cpwd != null && !cpwd.isEmpty() && email != null && !email.isEmpty() && 
         cpwd.equals(pwd)) {
-        System.out.println("HERE!!!");
-        Class.forName("com.mysql.jdbc.Driver");
-        InputStream stream = application.getResourceAsStream("/dbcon.properties");
+        InputStream privatestream = application.getResourceAsStream("/dbcon.properties");
+    InputStream publicstream = application.getResourceAsStream("/dbconpublic.properties");
     Properties props = new Properties();
-    props.load(stream);
+    props.load(privatestream);
+    props.load(publicstream);
     Class.forName("com.mysql.jdbc.Driver");
 
-    String databaseName = "finances";
+    String databaseName = props.getProperty("dbname");
     String dbconnection = props.getProperty("dbconnection");
     String dbuser = props.getProperty("dbuser");
     String dbpass = props.getProperty("dbpass");
