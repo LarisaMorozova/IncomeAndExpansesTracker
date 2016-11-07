@@ -13,7 +13,6 @@
 <%@ page import ="java.sql.*" %>
 <%@ page import ="java.lang.*" %>
 <%
-    Logger logger = Logger.getLogger( "source.jsp" );
     DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
     java.util.Date fromIncomesDate = formatter.parse(request.getParameter("from_date"));
     java.sql.Date fromIncomeDate = new java.sql.Date(fromIncomesDate.getTime());
@@ -46,7 +45,6 @@
     String resultexp = null;
     double difference = 0.00;
 
-    logger.warning("--> hello.");
     if (category.contains("income")) {
         resultset = st.executeQuery(
                 "SELECT income_date, category, description, amount FROM incomes " +
@@ -68,28 +66,21 @@
                 "WHERE expense_date between '" + fromIncomeDate + "' and '" + toIncomeDate + "'"
         );
     } else if(category.contains("allmoney")) {
-        
-        logger.warning("test");
+
         resultincome = statinc.executeQuery(
                 "SELECT SUM(amount) as sum FROM incomes " +
                 "WHERE income_date between '" + fromIncomeDate + "' and '" + toIncomeDate + "';"
         );
-        logger.warning("test1");
-        resultincome.first();
-        logger.warning("-->" + resultincome.getDouble(1));
         
         resultexpense = statexp.executeQuery(
                 "SELECT SUM(amount) as sum FROM expenses " +
                 "WHERE expense_date between '" + fromIncomeDate + "' and '" + toIncomeDate + "'"
         );
-        resultexpense.first();
-        resultincome.first();
-        logger.warning("--->" + resultexpense.getString(1));
+
         resultin = resultincome.getString(1);
         resultexp = resultexpense.getString(1);
         difference = resultincome.getDouble("sum") - 
                 resultexpense.getDouble("sum");
-        logger.warning("Difference: " + difference);
     }
 %>
 <!DOCTYPE html>

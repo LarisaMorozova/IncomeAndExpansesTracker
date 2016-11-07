@@ -15,6 +15,11 @@ file and deploy it to your chosen webserver.
 MySQL database and tables will be deployed by clicking a "Deploy database" link on index page. Database connection properties 
 are stored in the "dbcon.properties" file, located in the web directory.
 
+dbcon.properties should contain:
+dbconnection = <connection_to_database>
+dbuser = <database_user>
+dbpass = <database_password>
+
 ## Feedback
 Use github to leave your feedback.
 
